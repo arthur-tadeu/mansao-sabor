@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  --color-maromba-purple: #6D28D9;
+  --color-maromba-neon: #CCFF00;
+  --color-maromba-dark: #080808;
+  --color-maromba-bg: #0F0F12;
+
+  --font-anton: "Anton", sans-serif;
+  --font-space: "Space Grotesk", sans-serif;
+
+  --animate-glitch: glitch 0.3s cubic-bezier(.25,.46,.45,.94) both infinite;
+
+  @keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+  }
+}
+
+@utility maromba-card {
+  background: linear-gradient(145deg, #1A1A20, #0F0F12);
+  border: 1px solid rgba(204, 255, 0, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: var(--color-maromba-neon);
+    box-shadow: 0 0 20px rgba(204, 255, 0, 0.15);
+    transform: translateY(-5px);
+  }
+}
+
+@utility btn-maromba {
+  padding: 1rem 2.5rem;
+  background-color: var(--color-maromba-neon);
+  color: black;
+  font-family: var(--font-anton);
+  text-transform: uppercase;
+  font-size: 1.25rem;
+  letter-spacing: 0.1em;
+  font-style: italic;
+  transition: all 0.2s ease;
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+
+  &:hover {
+    background-color: white;
+    transform: skewX(-5deg) scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-maromba-bg text-white font-space antialiased overflow-x-hidden;
+  }
+
+  h1, h2, h3 {
+    @apply font-anton uppercase italic tracking-tighter;
+  }
+}
