@@ -3,12 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCC_mS8LhKPOuwhMxxRmqVDe1dc8d4WkNw",
-  authDomain: "mansao-sabor.firebaseapp.com", // Tentative
-  projectId: "mansao-sabor", // Tentative
+  apiKey: "AIzaSyB6pnKN7kgPVjphy9fpVu8ill-pSrDdTqs",
+  authDomain: "mansao-sabor.firebaseapp.com",
+  projectId: "mansao-sabor",
   storageBucket: "mansao-sabor.firebasestorage.app",
-  messagingSenderId: "TBD",
-  appId: "TBD"
+  messagingSenderId: "927459371248",
+  appId: "1:927459371248:web:ace9d1e00887512d467a35",
+  measurementId: "G-R855B7FXBV"
 };
 
 // Initialize Firebase
