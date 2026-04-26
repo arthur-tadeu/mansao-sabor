@@ -1,26 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, Lock, Zap } from 'lucide-react';
+import { X, Mail, Lock, Zap } from 'lucide-react';
+import { signInWithGoogle, registerWithEmail, loginWithEmail } from '../services/auth';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onGoogleLogin: (user: any) => void;
+  onLoginSuccess: (user: any) => void;
 }
 
-const RegistrationModal: React.FC<Props> = ({ isOpen, onClose, onGoogleLogin }) => {
-  const simulateGoogleLogin = () => {
-    // Simulated Google Auth Flow
-    const mockUser = {
-      name: "Maromba VIP",
-      email: "toguro.fan@gmail.com",
-      avatar: "https://i.pravatar.cc/150?u=marombavip"
-    };
-    
-    // Simulate a brief delay like a popup
-    setTimeout(() => {
-      onGoogleLogin(mockUser);
-    }, 800);
+const RegistrationModal: React.FC<Props> = ({ isOpen, onClose, onLoginSuccess }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleGoogleLogin = async () => {
+    try {
+      const user = await signInWithGoogle();
+      onLoginSuccess(user);
+      onClose();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    try {
+      if (isRegistering) {
+        await registerWithEmail(email, password);
+        setMessage("Código de verificação enviado! Verifique seu e-mail.");
+      } else {
+        const user = await loginWithEmail(email, password);
+        onLoginSuccess(user);
+        onClose();
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -52,41 +73,51 @@ const RegistrationModal: React.FC<Props> = ({ isOpen, onClose, onGoogleLogin }) 
               <div className="bg-maromba-purple w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(109,40,217,0.5)]">
                 <Zap className="text-maromba-neon" size={32} fill="currentColor" />
               </div>
-              <h2 className="text-4xl font-anton italic mb-2 tracking-tighter">ENTRAR NA MANSÃO</h2>
-              <p className="text-white/40 text-sm">Faça parte do legado. O shape te aguarda.</p>
+              <h2 className="text-4xl font-anton italic mb-2 tracking-tighter">
+                {isRegistering ? "CADASTRAR NA MANSÃO" : "ENTRAR NA MANSÃO"}
+              </h2>
+              <p className="text-white/40 text-sm">O legado te espera. Verificação obrigatória.</p>
             </div>
 
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            {error && <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-500 text-xs mb-6 font-anton italic uppercase">{error}</div>}
+            {message && <div className="bg-maromba-neon/10 border border-maromba-neon/20 p-4 rounded-xl text-maromba-neon text-xs mb-6 font-anton italic uppercase">{message}</div>}
+
+            <form className="space-y-6" onSubmit={handleEmailAuth}>
               <div className="space-y-4">
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="NOME COMPLETO"
-                    className="w-full bg-white/5 border border-white/10 px-12 py-4 text-white placeholder:text-white/10 font-anton italic focus:border-maromba-neon outline-none transition-all"
-                  />
-                </div>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                   <input 
                     type="email" 
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
                     placeholder="EMAIL MAROMBA"
-                    className="w-full bg-white/5 border border-white/10 px-12 py-4 text-white placeholder:text-white/10 font-anton italic focus:border-maromba-neon outline-none transition-all"
+                    className="w-full bg-white/5 border border-white/10 px-12 py-4 text-white placeholder:text-white/10 font-anton italic focus:border-maromba-neon outline-none"
+                    required
                   />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                   <input 
                     type="password" 
-                    placeholder="SENHA SECRETA"
-                    className="w-full bg-white/5 border border-white/10 px-12 py-4 text-white placeholder:text-white/10 font-anton italic focus:border-maromba-neon outline-none transition-all"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="SENHA"
+                    className="w-full bg-white/5 border border-white/10 px-12 py-4 text-white placeholder:text-white/10 font-anton italic focus:border-maromba-neon outline-none"
+                    required
                   />
                 </div>
               </div>
 
-              <button className="w-full btn-maromba mt-8">
-                CADASTRO INEXPLICÁVEL
+              <button type="submit" className="w-full btn-maromba">
+                {isRegistering ? "ENVIAR CÓDIGO DE ACESSO" : "ENTRAR AGORA"}
               </button>
+
+              <p 
+                onClick={() => setIsRegistering(!isRegistering)}
+                className="text-center text-xs text-white/40 hover:text-maromba-neon cursor-pointer font-anton italic uppercase"
+              >
+                {isRegistering ? "Já tem conta? Login" : "Não tem conta? Cadastre-se"}
+              </p>
 
               <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
@@ -94,7 +125,8 @@ const RegistrationModal: React.FC<Props> = ({ isOpen, onClose, onGoogleLogin }) 
               </div>
 
               <button 
-                onClick={simulateGoogleLogin}
+                type="button"
+                onClick={handleGoogleLogin}
                 className="w-full bg-white text-black py-4 font-anton italic flex items-center justify-center gap-3 hover:bg-maromba-neon transition-all"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -105,10 +137,6 @@ const RegistrationModal: React.FC<Props> = ({ isOpen, onClose, onGoogleLogin }) 
                 </svg>
                 ENTRAR COM GOOGLE
               </button>
-
-              <p className="text-center text-[10px] text-white/20 uppercase tracking-widest mt-8">
-                Ao entrar, você concorda com os termos de disciplina da Mansão.
-              </p>
             </form>
           </motion.div>
         </div>

@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Star, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getProducts } from '../services/db';
 
 const FLAVORS = [
   "Original", "Maçã Verde", "Tropical Mix", "Morango", "Melancia Extreme", "Uva", "Maracujá", "Pêssego", "Blueberry", "Limão",
@@ -10,7 +11,7 @@ const FLAVORS = [
   "Goiaba", "Graviola", "Copoçu", "Cranberry"
 ];
 
-const categories = ["Todos", "Não Alcoólicos", "Morango", "Melancia", "Especiais", "Mais Vendidos"];
+const categories = ["Todos", "Não Alcoólicos", "Morango", "Melancia", "Combos", "Mais Vendidos"];
 
 interface Props {
   addToCart: (product: any) => void;
@@ -19,9 +20,18 @@ interface Props {
 const Catalogos: React.FC<Props> = ({ addToCart }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("Todos");
+  const [dbProducts, setDbProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const data = await getProducts();
+      setDbProducts(data);
+    };
+    fetch();
+  }, []);
 
   const products = useMemo(() => {
-    return FLAVORS.map((flavor, index) => ({
+    const base = FLAVORS.map((flavor, index) => ({
       id: `item-${index}`,
       title: flavor.toUpperCase(),
       price: (Math.random() * 5 + 9).toFixed(2),
@@ -35,14 +45,15 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
       image: index % 3 === 0 ? "/can-traditional.png" : (index % 3 === 1 ? "/can-tropical.png" : "/can-greenapple.png"),
       description: `A verdadeira explosão de ${flavor} em uma lata de 473ml.`
     }));
-  }, []);
+    return [...base, ...dbProducts];
+  }, [dbProducts]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = activeFilter === "Todos" 
         || p.category === activeFilter 
-        || p.tags.includes(activeFilter);
+        || (p.tags && p.tags.includes(activeFilter));
       return matchesSearch && matchesFilter;
     });
   }, [searchTerm, activeFilter, products]);
@@ -52,7 +63,7 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-7xl md:text-9xl mb-6 italic">CATÁLOGO <span className="text-maromba-neon">COMPLETO</span></h1>
-          <p className="text-white/40 italic uppercase tracking-widest">Explore nossos 34 sabores de elite</p>
+          <p className="text-white/40 italic uppercase tracking-widest">Explore nossos 34 sabores de elite + combos exclusivos</p>
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 mb-16 items-center bg-maromba-bg p-6 rounded-3xl border border-white/5">
@@ -60,7 +71,7 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" />
             <input 
               type="text" 
-              placeholder="PESQUISAR SABOR..."
+              placeholder="PESQUISAR SABOR OU COMBO..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-white/5 border border-white/10 px-16 py-4 rounded-2xl text-white font-anton italic focus:border-maromba-neon outline-none"
@@ -86,11 +97,17 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
                 className="bg-maromba-bg border border-white/5 p-6 rounded-[2.5rem] group hover:border-maromba-neon/40 transition-all flex flex-col"
               >
                 <div className="relative h-60 mb-6 flex justify-center items-center">
-                  <Link to={`/produto/tradicional`} className="h-full"><img src={p.image} alt={p.title} className="h-full object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" /></Link>
+                  <Link to={`/produto/tradicional`} className="h-full">
+                    <img 
+                      src={p.image || "/can-traditional.png"} 
+                      alt={p.title} 
+                      className="h-full object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" 
+                    />
+                  </Link>
                 </div>
                 
                 <div className="flex justify-between items-start mb-2">
-                   <div className="flex items-center gap-1 text-maromba-neon text-[10px]"><Star size={10} fill="currentColor" /> {p.rating}</div>
+                   <div className="flex items-center gap-1 text-maromba-neon text-[10px]"><Star size={10} fill="currentColor" /> {p.rating || "5.0"}</div>
                    <span className="text-white/20 text-[10px] uppercase font-bold">{p.category}</span>
                 </div>
 

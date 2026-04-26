@@ -10,7 +10,9 @@ import History from './components/History';
 import Catalogos from './components/Catalogos';
 import CartView from './components/CartView';
 import Recipes from './components/Recipes';
+import Admin from './pages/Admin';
 import { motion, AnimatePresence } from 'framer-motion';
+import { subscribeToAuthChanges, logout } from './services/auth';
 
 function AppContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,6 +20,27 @@ function AppContent() {
   const [user, setUser] = useState<any>(null);
   const [cart, setCart] = useState<any[]>([]);
   const location = useLocation();
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthChanges((authUser) => {
+      if (authUser) {
+        setUser({
+          uid: authUser.uid,
+          name: authUser.displayName || authUser.email.split('@')[0],
+          email: authUser.email,
+          avatar: authUser.photoURL || `https://i.pravatar.cc/150?u=${authUser.uid}`
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    const timer = setTimeout(() => setShowContent(true), 100);
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
+  }, []);
 
   const addToCart = (product: any) => {
     setCart(prev => {
@@ -39,24 +62,10 @@ function AppContent() {
 
   const clearCart = () => setCart([]);
 
-  const handleGoogleLogin = (userData: any) => {
-    setUser(userData);
-    setIsModalOpen(false);
-    localStorage.setItem('maromba_user', JSON.stringify(userData));
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout();
     setUser(null);
-    localStorage.removeItem('maromba_user');
   };
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('maromba_user');
-    if (savedUser) setUser(JSON.parse(savedUser));
-    
-    const timer = setTimeout(() => setShowContent(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -117,6 +126,7 @@ function AppContent() {
                   </div>
                 </>
               } />
+              <Route path="/admin" element={<Admin />} />
               <Route path="/produto/:id" element={<ProductDetail addToCart={addToCart} />} />
               <Route path="/catalogos" element={<Catalogos addToCart={addToCart} />} />
               <Route path="/carrinho" element={
@@ -140,7 +150,7 @@ function AppContent() {
           <RegistrationModal 
             isOpen={isModalOpen} 
             onClose={() => setIsModalOpen(false)} 
-            onGoogleLogin={handleGoogleLogin}
+            onLoginSuccess={(userData) => setUser(userData)}
           />
         </motion.div>
       )}

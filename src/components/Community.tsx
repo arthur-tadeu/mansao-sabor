@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle, Heart, Share2, Zap } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = "http://localhost:3001/api/threads";
+import { getThreads, addThread } from '../services/db';
+import { auth } from '../lib/firebase';
 
 const Community = () => {
   const [comment, setComment] = useState("");
@@ -12,8 +11,8 @@ const Community = () => {
 
   const fetchThreads = async () => {
     try {
-      const res = await axios.get(API_URL);
-      setThreads(res.data);
+      const data = await getThreads();
+      setThreads(data);
     } catch (err) {
       console.error("Erro ao carregar threads:", err);
     } finally {
@@ -28,9 +27,14 @@ const Community = () => {
   const handlePublish = async () => {
     if (!comment) return;
     
+    if (!auth.currentUser) {
+      alert("Você precisa estar logado para postar!");
+      return;
+    }
+
     const newThread = {
-      author: "Visitante Maromba",
-      avatar: `https://i.pravatar.cc/150?u=${Math.random()}`,
+      author: auth.currentUser.displayName || auth.currentUser.email?.split('@')[0],
+      avatar: auth.currentUser.photoURL || `https://i.pravatar.cc/150?u=${auth.currentUser.uid}`,
       content: comment,
       likes: "0",
       replies: 0,
@@ -38,7 +42,7 @@ const Community = () => {
     };
 
     try {
-      await axios.post(API_URL, newThread);
+      await addThread(newThread);
       setComment("");
       fetchThreads(); // Refresh list
     } catch (err) {
@@ -55,7 +59,7 @@ const Community = () => {
       <div className="container mx-auto max-w-2xl">
         <div className="text-center mb-12">
           <h1 className="text-6xl mb-4 italic">COMUNIDADE <span className="text-maromba-neon">THREADS</span></h1>
-          <p className="text-white/40 italic">Onde o shape e a resenha se encontram. Posts reais e persistentes.</p>
+          <p className="text-white/40 italic">Onde o shape e a resenha se encontram. Posts reais no Firebase.</p>
         </div>
 
         {/* Input Area */}
