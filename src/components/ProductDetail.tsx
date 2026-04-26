@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Minus, Plus, ShoppingCart, CreditCard, QrCode, CheckCircle, MapPin } from 'lucide-react';
+import { getProductById } from '../services/db';
 
-const products = {
+const STATIC_PRODUCTS: Record<string, any> = {
   "tradicional": {
     title: "TRADICIONAL",
     price: 9.90,
@@ -24,6 +25,13 @@ const products = {
   }
 };
 
+const FLAVORS = [
+  "Original", "Maçã Verde", "Tropical Mix", "Morango", "Melancia Extreme", "Uva", "Maracujá", "Pêssego", "Blueberry", "Limão",
+  "Açaí c/ Guaraná", "Cereja", "Abacaxi", "Pitaya", "Amora", "Manga", "Tangerina", "Melão", "Kiwi", "Maçã Vermelha",
+  "Hortelã", "Gengibre", "Banana", "Coco", "Jabuticaba", "Framboesa", "Lichia", "Carambola", "Caju", "Acerola",
+  "Goiaba", "Graviola", "Copoçu", "Cranberry"
+];
+
 interface Props {
   addToCart: (product: any) => void;
 }
@@ -31,7 +39,8 @@ interface Props {
 const ProductDetail: React.FC<Props> = ({ addToCart }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const product = products[id as keyof typeof products];
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [view, setView] = useState<'detail' | 'checkout' | 'success'>('detail');
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'card' | 'boleto'>('pix');
@@ -39,15 +48,55 @@ const ProductDetail: React.FC<Props> = ({ addToCart }) => {
   const [freight, setFreight] = useState(0);
   const [calculating, setCalculating] = useState(false);
 
+  useEffect(() => {
+    const findProduct = async () => {
+      setLoading(true);
+      // 1. Check staticRecord
+      if (id && STATIC_PRODUCTS[id]) {
+        setProduct(STATIC_PRODUCTS[id]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Check "item-X" pattern from Catalogos
+      if (id?.startsWith("item-")) {
+        const index = parseInt(id.split("-")[1]);
+        const flavor = FLAVORS[index];
+        if (flavor) {
+          setProduct({
+            id,
+            title: flavor.toUpperCase(),
+            price: parseFloat((10 + (index % 5)).toFixed(2)),
+            image: index % 3 === 0 ? "/can-traditional.png" : (index % 3 === 1 ? "/can-tropical.png" : "/can-greenapple.png"),
+            description: `A verdadeira explosão de ${flavor} em uma lata de 473ml.`
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 3. Check Firestore
+      if (id) {
+        const dbProd = await getProductById(id);
+        if (dbProd) {
+          setProduct(dbProd);
+        }
+      }
+      setLoading(false);
+    };
+    findProduct();
+  }, [id]);
+
+  if (loading) return <div className="text-maromba-neon font-anton italic text-center pt-40">CARREGANDO CONTEÚDO EXTREMO...</div>;
   if (!product) return <div className="text-white text-center pt-40">Produto não encontrado</div>;
 
-  const totalProducts = product.price * quantity;
+  const productPrice = parseFloat(product.price.toString());
+  const totalProducts = productPrice * quantity;
   const totalOrder = totalProducts + freight;
 
   const calculateFreight = () => {
     if (!address) return;
     setCalculating(true);
-    // Simulate Google Maps Distance Matrix API call from Rondonópolis - MT
     setTimeout(() => {
       const simulatedDistance = Math.floor(Math.random() * 50) + 15;
       setFreight(simulatedDistance);
@@ -65,19 +114,21 @@ const ProductDetail: React.FC<Props> = ({ addToCart }) => {
         <AnimatePresence mode="wait">
           {view === 'detail' && (
             <motion.div key="detail" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-              <button onClick={() => navigate('/')} className="flex items-center gap-2 text-maromba-neon hover:text-white transition-colors mb-12 font-anton italic uppercase tracking-widest">
+              <button onClick={() => navigate('/catalogos')} className="flex items-center gap-2 text-maromba-neon hover:text-white transition-colors mb-12 font-anton italic uppercase tracking-widest">
                 <ArrowLeft size={20} /> Voltar ao Catálogo
               </button>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                 <div className="relative">
                   <div className="absolute inset-0 bg-maromba-purple/20 blur-[100px] rounded-full" />
-                  <img src={product.image} alt={product.title} className="w-full max-w-md mx-auto drop-shadow-[0_20px_50px_rgba(204,255,0,0.2)]" />
+                  <img src={product.image || "/can-traditional.png"} alt={product.title} className="w-full max-w-md mx-auto drop-shadow-[0_20px_50px_rgba(204,255,0,0.2)]" />
                 </div>
                 <div>
                   <span className="text-maromba-neon font-anton text-xl italic mb-4 block underline decoration-maromba-purple">SÉRIE PLATINUM</span>
                   <h1 className="text-6xl md:text-8xl mb-6">{product.title}</h1>
                   <p className="text-2xl text-white/60 mb-8 font-light italic leading-relaxed">{product.description}</p>
-                  <div className="text-5xl font-anton text-maromba-neon mb-12">R$ {product.price.toFixed(2)}</div>
+                  <div className="text-5xl font-anton text-maromba-neon mb-4">R$ {productPrice.toFixed(2)}</div>
+                  {quantity > 1 && <div className="text-white/30 text-xl font-anton italic mb-8">Subtotal: R$ {totalProducts.toFixed(2)}</div>}
+                  
                   <div className="flex flex-col sm:flex-row gap-8 mb-12">
                     <div className="flex items-center gap-6 bg-white/5 border border-white/10 p-2 rounded-xl">
                       <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-12 flex items-center justify-center hover:bg-maromba-neon hover:text-black transition-all text-maromba-neon"><Minus size={20} /></button>
@@ -86,12 +137,12 @@ const ProductDetail: React.FC<Props> = ({ addToCart }) => {
                     </div>
                     <button 
                       onClick={() => {
-                        addToCart({ ...product, id, quantity });
+                        addToCart({ ...product, quantity });
                         navigate('/carrinho');
                       }}
                       className="btn-maromba flex-1 flex items-center justify-center gap-4"
                     >
-                      <ShoppingCart /> ADICIONAR E VER CARRINHO
+                      <ShoppingCart /> ADICIONAR AO CARRINHO
                     </button>
                   </div>
                 </div>

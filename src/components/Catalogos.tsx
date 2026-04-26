@@ -34,7 +34,7 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
     const base = FLAVORS.map((flavor, index) => ({
       id: `item-${index}`,
       title: flavor.toUpperCase(),
-      price: (Math.random() * 5 + 9).toFixed(2),
+      price: parseFloat((Math.random() * 5 + 9).toFixed(2)),
       category: index % 4 === 0 ? "Especiais" : (flavor.includes("Sem") ? "Não Alcoólicos" : "Tradicional"),
       tags: [
         flavor.includes("Morango") ? "Morango" : null,
@@ -97,7 +97,7 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
                 className="bg-maromba-bg border border-white/5 p-6 rounded-[2.5rem] group hover:border-maromba-neon/40 transition-all flex flex-col"
               >
                 <div className="relative h-60 mb-6 flex justify-center items-center">
-                  <Link to={`/produto/tradicional`} className="h-full">
+                  <Link to={`/produto/${p.id}`} className="h-full">
                     <img 
                       src={p.image || "/can-traditional.png"} 
                       alt={p.title} 
@@ -112,11 +112,11 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
                 </div>
 
                 <h3 className="text-2xl font-anton italic leading-none mb-4">{p.title}</h3>
-                <div className="text-2xl font-anton text-white italic mb-6">R$ {p.price}</div>
+                <div className="text-2xl font-anton text-white italic mb-6">R$ {parseFloat(p.price.toString()).toFixed(2)}</div>
 
                 <div className="mt-auto grid grid-cols-2 gap-2">
                    <Link 
-                     to={`/produto/tradicional`} 
+                     to={`/produto/${p.id}`} 
                      className="bg-white/5 border border-white/10 flex items-center justify-center py-2 rounded-lg text-[10px] font-anton italic hover:bg-white/10"
                    >
                      VER MAIS

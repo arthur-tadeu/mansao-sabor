@@ -39,6 +39,15 @@ export const addProduct = async (product: any) => {
   });
 };
 
+export const getProductById = async (id: string) => {
+  const docRef = doc(db, "products", id);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() };
+  }
+  return null;
+};
+
 // ADMIN CHECK
 export const checkIfAdmin = async (uid: string) => {
   const adminDoc = await getDoc(doc(db, "admins", uid));
