@@ -15,6 +15,40 @@ import { db } from "../lib/firebase";
 export const getThreads = async () => {
   const q = query(collection(db, "threads"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
+  
+  if (snapshot.empty) {
+    // Seed initial data if empty
+    const initialThreads = [
+      {
+        author: 'Toguro',
+        avatar: 'https://i.pravatar.cc/150?u=toguro',
+        content: 'O shape inexplicável não vem do descanso, vem da luta. Quem tá focado hoje?',
+        likes: '24.5k',
+        replies: 842,
+        time: '2h'
+      },
+      {
+        author: 'Mansão Maromba',
+        avatar: 'https://i.pravatar.cc/150?u=mansao',
+        content: 'Acabou de chegar o lote novo de Maçã Verde. O estoque tá voando! 🔥',
+        likes: '12.1k',
+        replies: 156,
+        time: '5h'
+      }
+    ];
+    
+    for (const thread of initialThreads) {
+      await addDoc(collection(db, "threads"), {
+        ...thread,
+        createdAt: serverTimestamp()
+      });
+    }
+    
+    // Fetch again after seeding
+    const newSnapshot = await getDocs(q);
+    return newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
