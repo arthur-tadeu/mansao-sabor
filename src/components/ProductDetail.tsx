@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, ShoppingCart, CreditCard, QrCode, Truck, CheckCircle, MapPin } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingCart, CreditCard, QrCode, CheckCircle, MapPin } from 'lucide-react';
 
 const products = {
   "tradicional": {

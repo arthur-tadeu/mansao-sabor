@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, Star, Plus } from 'lucide-react';
+import { Search, Star, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FLAVORS = [
@@ -77,7 +77,7 @@ const Catalogos: React.FC<Props> = ({ addToCart }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <AnimatePresence>
-            {filteredProducts.map((p, idx) => (
+            {filteredProducts.map((p) => (
               <motion.div 
                 key={p.id}
                 layout

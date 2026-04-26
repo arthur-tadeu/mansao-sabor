@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { GlassWater, Flame, IceCream, Beaker } from 'lucide-react';
+import { GlassWater, Flame, Beaker } from 'lucide-react';
 
 const FLAVORS = [
   { name: "Original", ingredients: ["1 lata Mansão Original", "50ml Vodka", "Gelo à vontade", "Limão siciliano"] },

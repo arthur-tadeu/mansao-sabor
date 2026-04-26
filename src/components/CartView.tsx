@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, CheckCircle } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, CheckCircle } from 'lucide-react';
 
 interface Props {
   cart: any[];
